@@ -3,27 +3,53 @@ package com.company;
 
 public class Time {
 
-    private static final int MAX_HOUR = 24;
-    private static final int MAX_SIZE_MIN = 60;
-    private static final int MAX_SIZE_SEC = 60;
-
+    private static final int HOURS_IN_DAY = 24;
+    private static final int MIN_IN_DAY = 60;
+    private static final int SEC_IN_DAY = 60;
 
     private int hours;
     private int minutes;
     private int seconds;
 
-    TimeUnit timeUnit; //todo: что тут?
-
-
-    public void negativeNumbers(int number) throws Exception {
-        if (number < 0) {
-            exceptionFunction(timeUnit, number);
-        }
-    }
-
     public Time(int seconds) throws Exception {
         this.seconds = seconds;
-        //negativeNumbers(seconds);
+        calcTimeUnits();
+    }
+
+    private int checkSubtractedNumber(int timeElem, int num, int constTimeElem) throws Exception {
+        if (timeElem > 0 && num <= constTimeElem) {
+            timeElem = timeElem - num;
+        } else {
+            throw new TimeException("Subtracted number is too big! " + num);
+        }
+
+        if (timeElem == constTimeElem) {
+            timeElem = 0;
+        }
+
+        if (timeElem > constTimeElem) {
+            throw new TimeException("Time element out of his bounds " + timeElem);
+        }
+
+        return timeElem;
+    }
+
+    private int checkAddedNumber(int timeElem, int num, int constTimeElem) throws Exception {
+        if (num > 0 && num < constTimeElem) {
+            timeElem = timeElem + num;
+        } else {
+            throw new TimeException("Added number is too big or too small! " + num);
+        }
+
+        if (timeElem == constTimeElem) {
+            timeElem = 0;
+        }
+
+        if (timeElem > constTimeElem) {
+            throw new TimeException("Time element out of his bounds! " + timeElem);
+        }
+
+        return timeElem;
     }
 
     int getHours() {
@@ -40,94 +66,69 @@ public class Time {
 
     public void setTime(int seconds) throws Exception {
         this.seconds = seconds;
+        calcTimeUnits();
     }
 
-    public String getAll() throws Exception {
-        timeConvertation();
-        return hours + ":" + minutes + ":" + seconds;
+    public String getAll() {
+        return (Integer.toString(hours) + ":" + Integer.toString(minutes) + ":" + Integer.toString(seconds));
     }
 
     public void setAll(int hours, int minutes, int seconds) throws Exception {
         this.seconds = seconds;
         this.minutes = minutes;
         this.hours = hours;
+        calcTimeUnits();
     }
 
-    public void AmountAndResidualHours(int n) throws Exception {
-        timeUnit = TimeUnit.HOURS; //
-        hours = hours + n;
-        negativeNumbers(hours);
-        if (hours  > MAX_HOUR) {
-            throw new ErrorWithNumberException("Не может быть! Больше 24 часов!", hours);
+    public void addHours(int addedNumber) throws Exception {
+        hours = checkAddedNumber(hours, addedNumber, HOURS_IN_DAY);
+    }
+
+    public void addMinutes(int addedNumber) throws Exception {
+        minutes = checkAddedNumber(minutes, addedNumber, MIN_IN_DAY);
+    }
+
+    public void addSeconds(int addedNumber) throws Exception {
+        seconds = checkAddedNumber(seconds, addedNumber, SEC_IN_DAY);
+    }
+
+    public void subtractHours(int subtractedNumber) throws Exception {
+        hours = checkSubtractedNumber(hours, subtractedNumber, HOURS_IN_DAY);
+    }
+
+    public void subtractMinutes(int subtractedNumber) throws Exception {
+        minutes = checkSubtractedNumber(minutes, subtractedNumber, MIN_IN_DAY);
+    }
+
+    public void subtractSeconds(int subtractedNumber) throws Exception {
+        seconds = checkSubtractedNumber(seconds, subtractedNumber, SEC_IN_DAY);
+    }
+
+
+    private void calcTimeUnits() throws Exception {
+        checkMinutesAndHours(minutes, hours);
+
+        if (seconds < 0) {
+            throw new TimeException("Negative seconds! " + "seconds:" + seconds);
+        } else if (seconds > HOURS_IN_DAY * MIN_IN_DAY * SEC_IN_DAY) {
+            throw new TimeException("Too many seconds! " + "seconds:" + seconds);
+        } else {
+            hours += seconds / (MIN_IN_DAY * SEC_IN_DAY);
+            minutes += seconds % (MIN_IN_DAY * SEC_IN_DAY) / MIN_IN_DAY;
+            seconds = seconds % SEC_IN_DAY;
         }
-        if (hours == MAX_HOUR) {
-            hours = 0;
+        checkMinutesAndHours(minutes, hours);
+    }
+
+    public void checkMinutesAndHours(int minutes, int hours) throws Exception {
+        if (minutes < 0  || hours < 0) {
+            throw new TimeException("Negative minutes or hours! " + "hours:" + hours + " " + "minutes:" + minutes);
+        }
+
+        if (minutes > MIN_IN_DAY || hours > HOURS_IN_DAY) {
+            throw new TimeException("Too big minutes or hours! " + "hours:" + hours + " " + "minutes:" + minutes);
         }
     }
 
-    public void AmountAndResidualMinutes(int n) throws Exception {
-        timeUnit = TimeUnit.MINUTES;
-        minutes = minutes + n;
-        negativeNumbers(minutes);
-    }
 
-    public void AmountAndResidualSeconds(int n) throws Exception {
-        timeUnit = TimeUnit.SECONDS;
-        seconds = seconds + n;
-        negativeNumbers(seconds);
-    }
-
-    public void removeTime() {
-        this.seconds = 0;
-        this.minutes = 0;
-        this.hours = 0;
-    }
-
-    public void timeConvertation() throws Exception {
-        if (seconds >= MAX_SIZE_SEC) {
-            minutes = secondsToMinutesToHours(0, seconds, minutes);
-            seconds = seconds % MAX_SIZE_SEC;
-        } timeUnit = TimeUnit.SECONDS;
-        negativeNumbers(seconds);
-
-
-        if (minutes >= MAX_SIZE_MIN) {
-            hours = secondsToMinutesToHours(0, minutes, hours);
-            minutes = minutes % MAX_SIZE_MIN;
-        } timeUnit = TimeUnit.MINUTES;
-        negativeNumbers(minutes);
-
-        if (hours >= MAX_HOUR) {
-            hours = 0;
-        } timeUnit = TimeUnit.HOURS;
-        negativeNumbers(hours);
-
-    }
-
-    public int secondsToMinutesToHours(int result, int hms, int hms2) {
-        result = hms / 60;
-        hms2 = hms2 + result;
-        hms = hms % 60;
-        return hms2;
-    }
-
-    private void exceptionFunction(TimeUnit timeUnit, int value) throws Exception {
-        TimeUnitException tue;
-        switch (timeUnit) {
-            case HOURS:
-                tue = new TimeUnitException("Hours are wrong! " + "Incorrect value is: " + value);
-                break;
-            case MINUTES:
-                tue = new TimeUnitException("Minutes are wrong! " + "Incorrect value is: " + value);
-                break;
-            case SECONDS:
-                tue = new TimeUnitException("Seconds are wrong! " + "Incorrect value is: " + value);
-                break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + timeUnit);
-        }
-        throw tue;
-    }
-
-    //todo: проверку нужно делать в сеттерах, а не в геттерах!
 }
